@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-
 import uuid
+import requests
+from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -14,14 +15,51 @@ class Client(TimeStampedModel):
     client_secret = models.CharField(_("Client secret"), max_length=255)
     authorization_endpoint = models.URLField(_("Authorization endpoint"), max_length=255)
     token_endpoint = models.URLField(_("Token endpoint"), max_length=255, blank=True, default='')
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("User"), on_delete=models.PROTECT)
+    scope = models.CharField(_("Scope"), max_length=255, blank=True, default='read')
 
     class Meta:
         verbose_name = _("Oauth2 client")
         verbose_name_plural = _("Oauth2 clients")
 
+    def save(self, *args, **kwargs):
+        if not self.token_endpoint:
+            self.token_endpoint = self.authorization_endpoint
+        return super(Client, self).save(*args, **kwargs)
+
+    @property
+    def session_state_name(self):
+        return str(self.uid)
+
+    def start_authorization_url(self, request, redirect_url):
+        redirect_url = request.build_absolute_uri(redirect_url)
+        result = '{}?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}'
+        state = str(uuid.uuid4())
+        request.session[self.session_state_name] = state
+        result = result.format(self.authorization_endpoint, self.client_id, redirect_url, self.scope, state)
+        return result
+
+    def complete_authorization(self, request, redirect_url):
+        state = request.GET['state']
+        if request.session[self.session_state_name] != state:
+            raise ValueError("Wrong oauth state.")
+        del request.session[self.session_state_name]
+        code = request.GET['code']
+        token_url = '{}?grant_type=authorization_code&client_id={}&client_secret={}&redirect_uri={}&code={}'
+        token_url = token_url.format(self.token_endpoint, self.client_id, self.client_secret, redirect_url, code)
+        response = requests.post(token_url)
+        data = response.json()
+        access_token = AccessToken()
+        access_token.client = self
+        access_token.token_type = data['token_type']
+        access_token.expires_in = data['expires_in']
+        access_token.access_token = data['access_token']
+        access_token.refresh_token = data['refresh_token']
+        access_token.save()
+
 
 class AccessToken(TimeStampedModel):
-    client = models.ForeignKey(Client, verbose_name=_("Client"))
+    client = models.ForeignKey(Client, verbose_name=_("Client"), on_delete=models.CASCADE)
     token_type = models.CharField(_("Token type"), max_length=255)
     expires_in = models.IntegerField(_("Expires in"))
     access_token = models.CharField(_("Access token"), max_length=255)

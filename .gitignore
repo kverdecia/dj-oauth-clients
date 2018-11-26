@@ -39,6 +39,8 @@ htmlcov
 # Pycharm/Intellij
 .idea
 
+.vscode
+
 # Complexity
 output/*.html
 output/*/index.html
