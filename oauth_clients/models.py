@@ -4,10 +4,11 @@ import requests
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.six import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel
 
 
+@python_2_unicode_compatible
 class Client(TimeStampedModel):
     uid = models.UUIDField(_("UID"), default=uuid.uuid4, unique=True)
     name = models.CharField(_("Name"), max_length=100, unique=True)
@@ -21,6 +22,9 @@ class Client(TimeStampedModel):
     class Meta:
         verbose_name = _("Oauth2 client")
         verbose_name_plural = _("Oauth2 clients")
+
+    def __str__(self):
+        return self.name
 
     def save(self, *args, **kwargs):
         if not self.token_endpoint:
