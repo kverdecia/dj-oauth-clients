@@ -3,9 +3,8 @@ try:
     from django.core.urlresolvers import reverse
 except ImportError:
     from django.urls import reverse
-from django.utils.translation import ugettext
+from django.utils.translation import ugettext_lazy as _, ugettext
 from django.conf.urls import url
-from django.utils.six import print_
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -37,7 +36,6 @@ class ClientAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super(ClientAdmin, self).get_urls()
-        print(urls)
         info = self.model._meta.app_label, self.model._meta.model_name
         my_urls = [
             url(r'^(.+)/complete-authorization/$', self.complete_authorization, name='%s_%s_complete_authorization' % info),
@@ -69,4 +67,27 @@ class ClientAdmin(admin.ModelAdmin):
         return super(ClientAdmin, self).response_change(request, obj)
 
 
+class TokenAdmin(admin.ModelAdmin):
+    list_display = ('client', 'user_id', 'username', 'token_type', 'expires_in', 'access_token', 'refresh_token')
+    list_filter = ('client', 'created', 'modified')
+    actions = ['refresh_tokens']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def refresh_tokens(self, request, queryset):
+        for access_token in queryset:
+            access_token.refresh()
+        msg = ugettext("Selected tokens refreshed.")
+        self.message_user(request, msg, messages.INFO)
+    refresh_tokens.short_description = _("Refresh selected tokens")
+
+
 admin.site.register(models.Client, ClientAdmin)
+admin.site.register(models.AccessToken, TokenAdmin)

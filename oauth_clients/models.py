@@ -64,11 +64,25 @@ class Client(TimeStampedModel):
 
 class AccessToken(TimeStampedModel):
     client = models.ForeignKey(Client, verbose_name=_("Client"), on_delete=models.CASCADE)
+    user_id = models.CharField(_("User id"), max_length=255, blank=True, default='')
+    username = models.CharField(_("Username"), max_length=255, blank=True, default='')
     token_type = models.CharField(_("Token type"), max_length=255)
     expires_in = models.IntegerField(_("Expires in"))
     access_token = models.CharField(_("Access token"), max_length=255)
     refresh_token = models.CharField(_("Refresh token"), max_length=255)
-    
+
     class Meta:
         verbose_name = _("Access token")
         verbose_name_plural = _("Access tokens")    
+
+    def refresh(self):
+        url = '{}?grant_type=refresh_token&refresh_token={}&client_id={}&client_secret={}&scope={}'
+        url = url.format(self.client.token_endpoint, self.refresh_token, self.client.client_id,
+            self.client.client_secret, self.client.scope)
+        response = requests.post(url)
+        data = response.json()
+        self.token_type = data['token_type']
+        self.expires_in = data['expires_in']
+        self.access_token = data['access_token']
+        self.refresh_token = data['refresh_token']
+        self.save()
