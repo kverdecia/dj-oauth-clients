@@ -75,7 +75,7 @@ class AccessToken(TimeStampedModel):
         verbose_name = _("Access token")
         verbose_name_plural = _("Access tokens")    
 
-    def refresh(self):
+    def do_refresh_token(self):
         url = '{}?grant_type=refresh_token&refresh_token={}&client_id={}&client_secret={}&scope={}'
         url = url.format(self.client.token_endpoint, self.refresh_token, self.client.client_id,
             self.client.client_secret, self.client.scope)

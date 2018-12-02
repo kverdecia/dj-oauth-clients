@@ -12,7 +12,7 @@ from . import models
 
 
 class TokenInline(admin.TabularInline):
-    fields = ('token_type', 'expires_in', 'access_token', 'refresh_token')
+    fields = ('user_id', 'username', 'token_type', 'expires_in', 'access_token', 'refresh_token')
     readonly_fields = fields
     extra = 0
     model = models.AccessToken
@@ -20,9 +20,9 @@ class TokenInline(admin.TabularInline):
 
 class ClientAdmin(admin.ModelAdmin):
     list_display = ('uid', 'name', 'client_id', 'authorization_endpoint', 'token_endpoint',
-        'creator', 'created', 'modified')
+        'scope', 'creator', 'created', 'modified')
     fields = ('uid', 'name', 'client_id', 'client_secret', 'authorization_endpoint',
-        'token_endpoint', 'creator', 'created', 'modified', 'complete_authorization_url')
+        'token_endpoint', 'creator', 'scope', 'created', 'modified', 'complete_authorization_url')
     readonly_fields = ('uid', 'creator', 'created', 'modified', 'complete_authorization_url')
     inlines = [TokenInline]
 
@@ -83,7 +83,7 @@ class TokenAdmin(admin.ModelAdmin):
 
     def refresh_tokens(self, request, queryset):
         for access_token in queryset:
-            access_token.refresh()
+            access_token.do_refresh_token()
         msg = ugettext("Selected tokens refreshed.")
         self.message_user(request, msg, messages.INFO)
     refresh_tokens.short_description = _("Refresh selected tokens")
