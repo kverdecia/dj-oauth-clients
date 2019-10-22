@@ -51,7 +51,6 @@ class Client(TimeStampedModel):
         encoded_params = urlencode(params)
         result = '{}?{}'.format(self.authorization_endpoint, encoded_params)
         request.session[self.session_state_name] = state
-        result = result.format(self.authorization_endpoint, self.client_id, redirect_url, self.scope, state)
         return result
 
     def complete_authorization(self, request, redirect_url):
