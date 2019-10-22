@@ -17,6 +17,10 @@ class TokenInline(admin.TabularInline):
     extra = 0
     model = models.AccessToken
 
+class ParamInline(admin.TabularInline):
+    fields = ('name', 'value')
+    extra = 2
+    model = models.ClientParam
 
 class ClientAdmin(admin.ModelAdmin):
     list_display = ('uid', 'name', 'client_id', 'authorization_endpoint', 'token_endpoint',
@@ -24,7 +28,7 @@ class ClientAdmin(admin.ModelAdmin):
     fields = ('uid', 'name', 'client_id', 'client_secret', 'authorization_endpoint',
         'token_endpoint', 'creator', 'scope', 'created', 'modified', 'complete_authorization_url')
     readonly_fields = ('uid', 'creator', 'created', 'modified', 'complete_authorization_url')
-    inlines = [TokenInline]
+    inlines = [ParamInline, TokenInline]
 
     def complete_authorization_url_name(self):
         info = self.model._meta.app_label, self.model._meta.model_name

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.six import python_2_unicode_compatible
+from django.utils.six.moves.urllib.parse import urlencode
 from model_utils.models import TimeStampedModel
 
 
@@ -37,8 +38,18 @@ class Client(TimeStampedModel):
 
     def start_authorization_url(self, request, redirect_url):
         redirect_url = request.build_absolute_uri(redirect_url)
-        result = '{}?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}'
         state = str(uuid.uuid4())
+        params = {
+            'response_type': 'code',
+            'client_id': self.client_id,
+            'redirect_uri': redirect_url,
+            'scope': self.scope,
+            'state': state,
+        }
+        for row in self.params.all():
+            params[row.name] = row.value
+        encoded_params = urlencode(params)
+        result = '{}?{}'.format(self.authorization_endpoint, encoded_params)
         request.session[self.session_state_name] = state
         result = result.format(self.authorization_endpoint, self.client_id, redirect_url, self.scope, state)
         return result
@@ -58,8 +69,22 @@ class Client(TimeStampedModel):
         access_token.token_type = data['token_type']
         access_token.expires_in = data['expires_in']
         access_token.access_token = data['access_token']
-        access_token.refresh_token = data['refresh_token']
+        access_token.refresh_token = data.get('refresh_token', '')
         access_token.save()
+
+@python_2_unicode_compatible
+class ClientParam(models.Model):
+    client = models.ForeignKey(Client, verbose_name=_("Client"),
+        related_name='params', on_delete=models.CASCADE)
+    name = models.CharField(_("Name"), max_length=40)
+    value = models.TextField(_("Value"), blank=True, default='')
+
+    class Meta:
+        verbose_name = _("Client param")
+        verbose_name_plural = _("Client params")
+
+    def __str__(self):
+        return self.name
 
 
 class AccessToken(TimeStampedModel):
