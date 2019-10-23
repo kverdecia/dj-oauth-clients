@@ -108,5 +108,6 @@ class AccessToken(TimeStampedModel):
         self.token_type = data['token_type']
         self.expires_in = data['expires_in']
         self.access_token = data['access_token']
-        self.refresh_token = data['refresh_token']
+        if 'refresh_token' in data:
+            self.refresh_token = data['refresh_token']
         self.save()
