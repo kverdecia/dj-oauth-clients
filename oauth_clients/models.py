@@ -69,6 +69,7 @@ class Client(TimeStampedModel):
         access_token.expires_in = data['expires_in']
         access_token.access_token = data['access_token']
         access_token.refresh_token = data.get('refresh_token', '')
+        access_token.scope = data.get('scope', self.scope)
         access_token.save()
 
 @python_2_unicode_compatible
@@ -94,6 +95,7 @@ class AccessToken(TimeStampedModel):
     expires_in = models.IntegerField(_("Expires in"))
     access_token = models.CharField(_("Access token"), max_length=255)
     refresh_token = models.CharField(_("Refresh token"), max_length=255)
+    scope = models.TextField(_("Scope"), blank=True, default='')
 
     class Meta:
         verbose_name = _("Access token")
