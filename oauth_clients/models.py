@@ -4,6 +4,10 @@ import requests
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
 from django.utils.six import python_2_unicode_compatible
 from django.utils.six.moves.urllib.parse import urlencode
 from model_utils.models import TimeStampedModel
@@ -36,7 +40,17 @@ class Client(TimeStampedModel):
     def session_state_name(self):
         return str(self.uid)
 
-    def start_authorization_url(self, request, redirect_url):
+    @property
+    def session_redirect_url_name(self):
+        return '{}:redirect-url'.format(str(self.uid))
+
+    def complete_authorization_url(self, request=None):
+        info = self._meta.app_label, self._meta.model_name
+        view_name = 'admin:%s_%s_complete_authorization' % info
+        authorization_url = reverse(view_name, args=(self.uid,))
+        return request.build_absolute_uri(authorization_url) if request else authorization_url
+
+    def start_authorization_url(self, request, redirect_url, final_redirection=None):
         redirect_url = request.build_absolute_uri(redirect_url)
         state = str(uuid.uuid4())
         params = {
@@ -51,6 +65,8 @@ class Client(TimeStampedModel):
         encoded_params = urlencode(params)
         result = '{}?{}'.format(self.authorization_endpoint, encoded_params)
         request.session[self.session_state_name] = state
+        if final_redirection:
+            request.session[self.session_redirect_url_name] = final_redirection
         return result
 
     def complete_authorization(self, request, redirect_url):
@@ -71,6 +87,7 @@ class Client(TimeStampedModel):
         access_token.refresh_token = data.get('refresh_token', '')
         access_token.scope = data.get('scope', self.scope)
         access_token.save()
+        return request.session.pop(self.session_redirect_url_name, None)
 
 @python_2_unicode_compatible
 class ClientParam(models.Model):
