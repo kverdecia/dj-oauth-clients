@@ -135,9 +135,7 @@ class AccessToken(TimeStampedModel):
 
     def expiration(self):
         modified = timezone.localtime(self.modified)
-        print(modified)
         delta = datetime.timedelta(seconds=self.expires_in)
-        print(modified + delta)
         return modified + delta
 
     def is_expired(self):
