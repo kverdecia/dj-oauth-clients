@@ -4,6 +4,7 @@ try:
 except ImportError:
     from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.formats import localize
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -64,7 +65,11 @@ class ClientAdmin(admin.ModelAdmin):
 
 
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('client', 'user_id', 'username', 'token_type', 'expires_in', 'access_token', 'refresh_token')
+    list_display = ('client', 'user_id', 'username', 'token_type', 'get_expiration',
+        'get_expired', 'modified')
+    fields = ('client', 'user_id', 'username', 'token_type', 'scope', 'expires_in',
+        'get_expiration', 'get_expired', 'access_token', 'refresh_token', 'created',
+        'modified')
     list_filter = ('client', 'created', 'modified')
     actions = ['refresh_tokens']
 
@@ -83,6 +88,15 @@ class TokenAdmin(admin.ModelAdmin):
         msg = ugettext("Selected tokens refreshed.")
         self.message_user(request, msg, messages.INFO)
     refresh_tokens.short_description = _("Refresh selected tokens")
+
+    def get_expiration(self, obj):
+        return localize(obj.expiration())
+    get_expiration.short_description = _("Expiration")
+
+    def get_expired(self, obj):
+        return obj.is_expired()
+    get_expired.short_description = _("Expired")
+    get_expired.boolean = True
 
 
 admin.site.register(models.Client, ClientAdmin)

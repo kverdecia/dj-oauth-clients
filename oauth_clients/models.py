@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import uuid
 import requests
+import datetime
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 try:
     from django.core.urlresolvers import reverse
@@ -130,3 +132,13 @@ class AccessToken(TimeStampedModel):
         if 'refresh_token' in data:
             self.refresh_token = data['refresh_token']
         self.save()
+
+    def expiration(self):
+        modified = timezone.localtime(self.modified)
+        print(modified)
+        delta = datetime.timedelta(seconds=self.expires_in)
+        print(modified + delta)
+        return modified + delta
+
+    def is_expired(self):
+        return timezone.now() > self.expiration()
