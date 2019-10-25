@@ -70,16 +70,11 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('client', 'user_id', 'username', 'token_type', 'scope', 'expires_in',
         'get_expiration', 'get_expired', 'access_token', 'refresh_token', 'created',
         'modified')
+    readonly_fields = fields
     list_filter = ('client', 'created', 'modified')
     actions = ['refresh_tokens']
 
-    def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser
-
     def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
         return False
 
     def refresh_tokens(self, request, queryset):
