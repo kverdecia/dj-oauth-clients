@@ -1,0 +1,48 @@
+{
+  "name": "dj-oauth-clients",
+  "image": "mcr.microsoft.com/devcontainers/python:3.9",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/pipenv:2": {},
+  },
+  "runArgs": [
+    "--name=dj-oauth-clients",
+    "--label=com.docker.compose.project=devcontainers"
+  ],
+  "mounts": [
+    "type=bind,source=${localWorkspaceFolder}/.devcontainer/Pipfile,target=${containerWorkspaceFolder}/Pipfile"
+  ],
+  "postCreateCommand": "pipenv install -e .",
+  "portsAttributes": {
+    "8000": {
+      "label": "django"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "streetsidesoftware.code-spell-checker",
+        "tamasfe.even-better-toml",
+        "github.copilot",
+        "github.copilot-chat",
+        "michelemelluso.gitignore",
+        "hashicorp.terraform",
+        "chrisdias.promptboost",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "batisteo.vscode-django",
+        "wholroyd.jinja",
+        "njpwerner.autodocstring",
+        "ms-toolsai.jupyter",
+        "editorconfig.editorconfig",
+        "christian-kohler.path-intellisense",
+        "charliermarsh.ruff",
+        "bruno-api-client.bruno"
+      ]
+    }
+  }
+}
