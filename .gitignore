@@ -51,3 +51,5 @@ Pipfile
 Pipfile.lock
 
 !.devcontainer/Pipfile
+db.sqlite3
+localsettings.py
