@@ -47,3 +47,7 @@ output/*/index.html
 
 # Sphinx
 docs/_build
+Pipfile
+Pipfile.lock
+
+!.devcontainer/Pipfile
