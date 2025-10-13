@@ -112,13 +112,13 @@ class AccessToken(TimeStampedModel):
     username = models.CharField(_("Username"), max_length=255, blank=True, default='')
     token_type = models.CharField(_("Token type"), max_length=255)
     expires_in = models.IntegerField(_("Expires in"))
-    access_token = models.CharField(_("Access token"), max_length=255)
-    refresh_token = models.CharField(_("Refresh token"), max_length=255)
+    access_token = models.TextField(_("Access token"))
+    refresh_token = models.TextField(_("Refresh token"))
     scope = models.TextField(_("Scope"), blank=True, default='')
 
     class Meta:
         verbose_name = _("Access token")
-        verbose_name_plural = _("Access tokens")    
+        verbose_name_plural = _("Access tokens")
 
     def do_refresh_token(self):
         url = '{}?grant_type=refresh_token&refresh_token={}&client_id={}&client_secret={}&scope={}'
