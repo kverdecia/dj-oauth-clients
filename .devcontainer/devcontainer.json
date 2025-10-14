@@ -1,8 +1,8 @@
 {
   "name": "dj-oauth-clients",
-  "image": "mcr.microsoft.com/devcontainers/python:3.9",
+  "image": "mcr.microsoft.com/devcontainers/python:3.8",
   "features": {
-    "ghcr.io/devcontainers-extra/features/pipenv:2": {},
+    "ghcr.io/devcontainers-extra/features/pipenv:2": {}
   },
   "runArgs": [
     "--name=dj-oauth-clients",
@@ -11,7 +11,7 @@
   "mounts": [
     "type=bind,source=${localWorkspaceFolder}/.devcontainer/Pipfile,target=${containerWorkspaceFolder}/Pipfile"
   ],
-  "postCreateCommand": "pipenv install -e .",
+  "postCreateCommand": "pipenv --python=3.8 install -e . && pipenv run python manage.py migrate",
   "portsAttributes": {
     "8000": {
       "label": "django"
